@@ -1,0 +1,36 @@
+Traceback (most recent call last):
+  File "/home/lexusolu/public_html/python/passenger_wsgi.py", line 15, in <module>
+    Print("Hello World!")
+NameError: name 'Print' is not defined
+Traceback (most recent call last):
+  File "/home/lexusolu/public_html/python/passenger_wsgi.py", line 15, in <module>
+    Print("Hello World!")
+NameError: name 'Print' is not defined
+[UID:1133][3323892] Child process with pid: 3323898 was killed by signal: 15, core dumped: no
+Traceback (most recent call last):
+  File "/home/lexusolu/public_html/python/passenger_wsgi.py", line 15, in <module>
+    Print("Hello World!")
+NameError: name 'Print' is not defined
+[UID:1133][3323892] Child process with pid: 3323910 was killed by signal: 15, core dumped: no
+Traceback (most recent call last):
+  File "/home/lexusolu/public_html/python/passenger_wsgi.py", line 15, in <module>
+    Print("Hello World!")
+NameError: name 'Print' is not defined
+[UID:1133][3323892] Child process with pid: 3323968 was killed by signal: 15, core dumped: no
+[UID:1133][2803433] Child process with pid: 2803437 was killed by signal: 15, core dumped: no
+Getting options for symbol: AAL
+Getting price history...
+Current price: 12.819999694824219
+Getting options expirations...
+Found 18 expirations
+Getting options for expiration: 2025-08-15
+Converting to JSON...
+Success - returning JSON data
+Getting options for symbol: TSLA
+Getting price history...
+Current price: 335.5799865722656
+Getting options expirations...
+Found 21 expirations
+Getting options for expiration: 2025-08-15
+Converting to JSON...
+Success - returning JSON data

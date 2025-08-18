@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Options Trader Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+        
+        input[type="text"] {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            width: 200px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .price-display {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 24px;
+            font-weight: bold;
+            color: #2a5298;
+        }
+        
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .options-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .options-section h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            text-align: center;
+        }
+        
+        .calls { border-left: 4px solid #28a745; }
+        .puts { border-left: 4px solid #dc3545; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        th, td {
+            padding: 8px;
+            text-align: right;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background: #e9ecef;
+            font-weight: bold;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .options-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .search-box {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            input[type="text"] {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Options Trader Dashboard</h1>
+            <p>Real-time options data for smart trading decisions</p>
+        </div>
+        
+        <div class="content">
+            <div class="search-box">
+                <input type="text" id="symbolInput" placeholder="Enter symbol (e.g., AAL)" value="AAL">
+                <button onclick="loadOptions()">Get Options Data</button>
+                <button onclick="startAutoRefresh()">Auto Refresh</button>
+            </div>
+            
+            <div id="priceDisplay"></div>
+            <div id="optionsData"></div>
+        </div>
+    </div>
+
+    <script>
+        let autoRefreshInterval = null;
+
+        async function loadOptions() {
+            const symbol = document.getElementById('symbolInput').value.toUpperCase();
+            if (!symbol) return;
+
+            document.getElementById('optionsData').innerHTML = '<div class="loading">📈 Loading options data...</div>';
+
+            try {
+                // Use absolute path to ensure correct routing
+                const apiUrl = `${window.location.origin}${window.location.pathname}api/options/${symbol}`;
+                console.log('Fetching from:', apiUrl);
+                
+                const response = await fetch(apiUrl);
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers.get('content-type'));
+                
+                const responseText = await response.text();
+                console.log('Raw response:', responseText);
+                
+                const data = JSON.parse(responseText);
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                displayOptionsData(data);
+            } catch (error) {
+                document.getElementById('optionsData').innerHTML = 
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function displayOptionsData(data) {
+            const priceHtml = `
+                <div class="price-display">
+                    ${data.symbol}: $${data.current_price}
+                    <div style="font-size: 14px; color: #666; margin-top: 5px;">
+                        Expiration: ${data.expiration} | Updated: ${new Date(data.timestamp).toLocaleTimeString()}
+                    </div>
+                </div>
+            `;
+
+            const callsTable = createOptionsTable(data.calls);
+            const putsTable = createOptionsTable(data.puts);
+
+            const optionsHtml = `
+                <div class="options-container">
+                    <div class="options-section calls">
+                        <h3>📈 Call Options</h3>
+                        ${callsTable}
+                    </div>
+                    <div class="options-section puts">
+                        <h3>📉 Put Options</h3>
+                        ${putsTable}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('priceDisplay').innerHTML = priceHtml;
+            document.getElementById('optionsData').innerHTML = optionsHtml;
+        }
+
+        function createOptionsTable(options) {
+            if (!options || options.length === 0) {
+                return '<p>No options data available</p>';
+            }
+
+            let tableHtml = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Strike</th>
+                            <th>Last</th>
+                            <th>Bid</th>
+                            <th>Ask</th>
+                            <th>Volume</th>
+                            <th>OI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            options.forEach(option => {
+                tableHtml += `
+                    <tr>
+                        <td>$${option.strike}</td>
+                        <td>$${option.lastPrice || 0}</td>
+                        <td>$${option.bid || 0}</td>
+                        <td>$${option.ask || 0}</td>
+                        <td>${option.volume || 0}</td>
+                        <td>${option.openInterest || 0}</td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += '</tbody></table>';
+            return tableHtml;
+        }
+
+        function startAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                event.target.textContent = 'Auto Refresh';
+                return;
+            }
+
+            autoRefreshInterval = setInterval(loadOptions, 30000); // Refresh every 30 seconds
+            event.target.textContent = 'Stop Refresh';
+            loadOptions(); // Load immediately
+        }
+
+        // Load AAL data on page load
+        window.onload = () => loadOptions();
+
+        // Allow Enter key to trigger search
+        document.getElementById('symbolInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loadOptions();
+            }
+        });
+    </script>
+</body>
+</html>
